@@ -46,6 +46,11 @@ jobs:
               c.body?.includes(`- #${issue_number}:`)
             );
 
+            if (existingContract) {
+              core.info("Execution contract already exists; skipping queue transition.");
+              return;
+            }
+
             let addedInProgress = false;
             let removedReady = false;
 
@@ -69,18 +74,13 @@ jobs:
                     name: "agent:ready",
                   });
                   removedReady = true;
-                } catch (error) {
-                  if (error.status === 404) {
+                } catch (removeError) {
+                  if (removeError.status === 404) {
                     core.info("agent:ready was already removed.");
                   } else {
-                    throw error;
+                    throw removeError;
                   }
                 }
-              }
-
-              if (existingContract) {
-                core.info("Execution contract already exists; transition applied without duplicate enqueue.");
-                return;
               }
 
               const lines = [
